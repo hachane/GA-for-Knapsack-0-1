@@ -24,6 +24,7 @@ void generate_population()
     }
 }
 
+// giu lai nhung mon do co mat do gia tri midu = item_benefit / item_weight cao nhat
 void greedy(int chromosome_index)
 {
     vector<pair<double, int>> midu;
@@ -51,6 +52,10 @@ void greedy(int chromosome_index)
     for(int i = 0; i < track; i++)
      chromosomes[chromosome_index][temp[i]] = 1;
 }
+
+/* tính toán độ fitness; trong bài toán đang xét thì fitness = tổng giá trị các món đồ; lưu những giá trị fitness vào 1 map để xét đến tần suất xuất hiện
+của những cá thể trùng độ fitness và tính tần suất xuất hiện của chúng.
+Nếu một cá thể mà có tổng khối lượng vượt quá sức chứa; thì ta sẽ chọn ngẫu nhiên 1 món đồ để bỏ lại trong phương án ấy */
 void calc_fitness()
 {
     total_fitness = 0;
@@ -81,6 +86,9 @@ void calc_fitness()
         total_fitness += fitness[i];
     }
 }
+
+/* sau khi biết được tần suất xuất hiện của các fitness có thể thu được; thì ta xem tần suất đấy xuất hiện bao nhiêu phần trăm trong tổng số tất cả
+các cá thể. Nếu quá 90% dân số có cùng độ fitness thì ta dừng thuật toán*/
 int calc_percentage()
 {
     int max_cnt = 0;
@@ -88,6 +96,8 @@ int calc_percentage()
      max_cnt = max(max_cnt, x.second);
     return max_cnt * 100 / pop;// tim phan tu chiem fitness nhieu nhat
 }
+
+// tìm cá thể có độ fitness cao nhất; cao thứ 2
 int get_fittest()
 {
     int max_fitness = INT_MIN, index = -1;
@@ -114,6 +124,8 @@ int get_second_fitness(int fittest_index)
     }
     return index;
 }
+
+//elitism là lưu lại 2 cá thể tốt nhất từ quần thể cũ
 void elitism()
 {
     int fittest_index = get_fittest();
@@ -121,6 +133,9 @@ void elitism()
     int second_fitness_index = get_second_fitness(fittest_index);
     offspring.push_back(chromosomes[second_fitness_index]);
 }
+
+// toán tử chọn lọc: sử dụng bánh xe roulette; random đến 1 giá trị r nhỏ hơn total_fitness rồi tiến hành cộng các fitness đến khi nào > r thì dừng
+// cá thể nào có độ fitness càng lớn càng dễ được chọn!! (do vùng fitness "rộng" hơn)
 int roulette_wheel_selection()
 {
     int r = rand() % total_fitness, sum = 0;
@@ -132,6 +147,7 @@ int roulette_wheel_selection()
     }
     return -1;
 }
+
 void mutation(vector<bool> &chromosome)
 {
     for(int i = 0; i < n; i++)
@@ -141,6 +157,8 @@ void mutation(vector<bool> &chromosome)
          chromosome[i] != chromosome[i];
     }
 }
+
+// toán tử lai ghép: chọn ngẫu nhiên 1 số r < n (n giờ đây còn là độ dài DNA) là điểm bắt đầu trao đổi chéo
 void crossover(int chromosome_index1, int chromosome_index2)
 {
     vector<bool> chromosome1 = chromosomes[chromosome_index1];
@@ -155,9 +173,10 @@ void crossover(int chromosome_index1, int chromosome_index2)
     offspring.push_back(chromosome1);
     offspring.push_back(chromosome2);
 }
+
+// tiến hành sinh sản
 void reproduce()
 {
-    //Elitism - two of the fittest chromosomes are copied without changes to a new population
     elitism();
     while (offspring.size() < pop)
     {
