@@ -52,7 +52,7 @@ void greedy(int chromosome_index)
     }
     for(int i = 0; i < n; i++)
      chromosomes[chromosome_index][i] = 0;
-    for(int i = 0; i < k; i++)
+    for(int i = 0; i < k - 1; i++)
      chromosomes[chromosome_index][temp[i]] = 1;
 }
 
