@@ -5,7 +5,8 @@ const int gen = 10; // so luong the he dang xet
 const int N = 50; // so luong mon do nhieu nhat trong cac testcase dang xet
 
 vector<vector<bool>> chromosomes, offspring; // cac vector luu lai NST; ca the con
-int n, capacity, items_volume[N], items_benefit[N], fitness[pop], total_fitness;
+int n, capacity; // n là số lượng món đồ đang xét trong test case hiện tại
+int items_volume[N], items_benefit[N], fitness[pop], total_fitness;
 unordered_map<int, int> fitness_cnt;
 
 //khoi tao quan the bang nhung day nhi phan 01001...01000
@@ -24,7 +25,11 @@ void generate_population()
     }
 }
 
-// giu lai nhung mon do co mat do gia tri midu = item_benefit / item_weight cao nhat
+// lưu lại nhũng món đồ có "mật độ giá trị" cao nhất bằng 1 vecto gồm các pair có tên là midu
+// midu.first là mật độ giá trị của món đồ i = giá tiền / khối lượng
+/* midu.second là chỉ số i (đánh dấu chỉ số) => sort theo midu.first thành 1 dãy giảm dần theo mật độ giá trị => lấy những món đồ có mật độ giá trị
+cao cho đến khi khối lượng vượt quá sức chứa*/
+
 void greedy(int chromosome_index)
 {
     vector<pair<double, int>> midu;
@@ -36,20 +41,18 @@ void greedy(int chromosome_index)
          midu.push_back(make_pair(0, i));
     }
     sort(midu.rbegin(), midu.rend());
-    vector<bool> temp;
-    int track = 0;
+    vector<int> temp;
     int k = 0;
     int sum = 0;
     while(sum <= capacity)
     {
-        sum += items_volume[midu[k].second];
         temp.push_back(midu[k].second);
         k++;
-        track++;
+        sum += items_volume[midu[k].second];
     }
     for(int i = 0; i < n; i++)
      chromosomes[chromosome_index][i] = 0;
-    for(int i = 0; i < track; i++)
+    for(int i = 0; i < k; i++)
      chromosomes[chromosome_index][temp[i]] = 1;
 }
 
@@ -125,7 +128,7 @@ int get_second_fitness(int fittest_index)
     return index;
 }
 
-//elitism là lưu lại 2 cá thể tốt nhất từ quần thể cũ
+//elitism là lưu lại 2 cá thể tốt nhất từ quần thể cũ sang quần thể mới
 void elitism()
 {
     int fittest_index = get_fittest();
@@ -148,6 +151,7 @@ int roulette_wheel_selection()
     return -1;
 }
 
+// đột biến; chọn ngẫu nhiên 1 dna để đột biến
 void mutation(vector<bool> &chromosome)
 {
     for(int i = 0; i < n; i++)
@@ -177,6 +181,7 @@ void crossover(int chromosome_index1, int chromosome_index2)
 // tiến hành sinh sản
 void reproduce()
 {
+    //Elitism - two of the fittest chromosomes are copied without changes to a new population
     elitism();
     while (offspring.size() < pop)
     {
@@ -198,15 +203,9 @@ int main()
         cin >> n >> capacity;
         for (int i = 0; i < n; i++)
          cin >> items_volume[i] >> items_benefit[i];
-        /*vector<bool> best;
-        for(int i = 0; i < n; i++)
-        {
-         bool element; cin >> element;
-         best.push_back(element);
-        }*/
         generate_population();
         int percentage = 0, generation_number = 0;
-        while (percentage < 90 || generation_number < gen)
+        while (percentage < 20 || generation_number < gen)
         {
             if (generation_number)
             {
@@ -216,7 +215,7 @@ int main()
             calc_fitness();
             percentage = calc_percentage();
             generation_number++;
-            // think if the percentage will be lost !!
+            // phòng trường hợp một số phần trăm bị loại bỏ
             if (percentage < 90 || generation_number < gen)
                 reproduce();
         }
@@ -224,14 +223,6 @@ int main()
         int res = fitness[fittest_index];
         cout << "Case: " << c << ' ' << res << " ";
         cout << endl;
-        int diff = 0;
-        for(int i = 0; i < n; i++)
-        {
-         /*if(best[i] != chromosomes[fittest_index][i]) diff++;*/
-         cout << chromosomes[fittest_index][i] << " ";
-        }
-        cout << endl;
-        /*cout << endl << (diff * 100.0) / n << endl;*/
     }
     return 0;
 }
